@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Message Encryption</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #613684 0%, #323740 100%);
+        }
+        .crypto-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .message-box {
+            min-height: 150px;
+        }
+        .key-box {
+            font-family: monospace;
+            letter-spacing: 0.1em;
+        }
+        textarea:focus, input:focus, button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.5);
+        }
+        .copy-btn:hover .copy-icon {
+            opacity: 1;
+        }
+        .copy-icon {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex flex-col">
+    <header class="py-8 px-4 text-center">
+        <h1 style="color: rgb(52, 221, 167);" class="text-4xl font-bold text-white mb-2">ENCRYPTION & DECRYPTION</h1>
+        <p style="color: rgb(234, 226, 241);" class="text-purple-200">End-to-end encrypted message sharing</p>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 pb-12">
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Encryption Card -->
+            <div class="crypto-card rounded-xl p-6 shadow-xl">
+                <h2 class="text-2xl font-semibold text-white mb-4">Encrypt Message</h2>
+                <div class="mb-4">
+                    <label for="message" class="block text-purple-100 mb-2">Your secret message</label>
+                    <textarea id="message" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-purple-200 message-box" placeholder="Type your message here..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-purple-100 mb-2">Encryption password</label>
+                    <input type="password" id="password" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white" placeholder="Create a strong password" oninput="checkPasswordStrength(this.value)">
+                    <div id="password-strength" class="h-1 mt-1 rounded-full"></div>
+                </div>
+                <div class="mb-4">
+                    <label for="iv" class="block text-purple-100 mb-2">Initialization Vector (IV)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="iv" class="flex-grow px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white key-box" placeholder="Auto-generated" readonly>
+                        <button id="copy-iv" class="copy-btn px-3 py-3 bg-purple-700 hover:bg-purple-600 rounded-lg text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 copy-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="encrypted" class="block text-purple-100 mb-2">Encrypted message</label>
+                    <div class="flex items-center gap-2">
+                        <textarea id="encrypted" class="flex-grow px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white key-box message-box" placeholder="Encrypted output will appear here" readonly></textarea>
+                        <button id="copy-encrypted" class="copy-btn px-3 py-3 bg-purple-700 hover:bg-purple-600 rounded-lg text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 copy-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <button id="encrypt-btn" class="w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-lg text-white font-medium transition">Encrypt Message</button>
+            </div>
+
+            <!-- Decryption Card -->
+            <div class="crypto-card rounded-xl p-6 shadow-xl">
+                <h2 class="text-2xl font-semibold text-white mb-4">Decrypt Message</h2>
+                <div class="mb-4">
+                    <label for="encrypted-input" class="block text-purple-100 mb-2">Encrypted message</label>
+                    <textarea id="encrypted-input" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-purple-200 message-box" placeholder="Paste encrypted message here"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="password-decrypt" class="block text-purple-100 mb-2">Decryption password</label>
+                    <input type="password" id="password-decrypt" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white" placeholder="Enter the password used for encryption">
+                </div>
+                <div class="mb-4">
+                    <label for="iv-decrypt" class="block text-purple-100 mb-2">Initialization Vector (IV)</label>
+                    <input type="text" id="iv-decrypt" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white" placeholder="Paste the IV used for encryption">
+                </div>
+                <div class="mb-4">
+                    <label for="decrypted" class="block text-purple-100 mb-2">Decrypted message</label>
+                    <textarea id="decrypted" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white message-box" placeholder="Decrypted message will appear here" readonly></textarea>
+                </div>
+                <button id="decrypt-btn" class="w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-lg text-white font-medium transition mb-3">Decrypt Message</button>
+                <button id="sample-btn" class="w-full py-3 bg-teal-600 hover:bg-teal-500 rounded-lg text-white font-medium transition" onclick="loadSampleMessage()">Load Sample Message</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-6 text-center text-purple-200 text-sm">
+    </footer>
+
+    <script>
+        // Encryption function using AES-GCM
+        async function encryptMessage(message, password) {
+            try {
+                // Convert password to key
+                const encoder = new TextEncoder();
+                const passwordBuffer = encoder.encode(password);
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    'raw',
+                    passwordBuffer,
+                    { name: 'PBKDF2' },
+                    false,
+                    ['deriveKey']
+                );
+                
+                // Generate random salt
+                const salt = window.crypto.getRandomValues(new Uint8Array(16));
+                
+                // Derive key
+                const key = await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: salt,
+                        iterations: 100000,
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial,
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['encrypt', 'decrypt']
+                );
+                
+                // Generate IV
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                document.getElementById('iv').value = arrayBufferToBase64(iv);
+                
+                // Encrypt message
+                const encrypted = await window.crypto.subtle.encrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: iv
+                    },
+                    key,
+                    encoder.encode(message)
+                );
+                
+                // Combine salt + iv + encrypted data
+                const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+                combined.set(salt);
+                combined.set(iv, salt.length);
+                combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+                
+                return arrayBufferToBase64(combined);
+            } catch (error) {
+                console.error('Encryption error:', error);
+                alert('Encryption failed: ' + error.message);
+                return null;
+            }
+        }
+
+        // Decryption function
+        async function decryptMessage(combinedData, password) {
+            try {
+                // Decode base64
+                const combinedBuffer = base64ToArrayBuffer(combinedData);
+                
+                // Extract salt, iv and encrypted data
+                const salt = combinedBuffer.slice(0, 16);
+                const iv = combinedBuffer.slice(16, 16 + 12);
+                const encrypted = combinedBuffer.slice(16 + 12);
+                
+                // Convert password to key
+                const encoder = new TextEncoder();
+                const passwordBuffer = encoder.encode(password);
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    'raw',
+                    passwordBuffer,
+                    { name: 'PBKDF2' },
+                    false,
+                    ['deriveKey']
+                );
+                
+                // Derive key
+                const key = await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: salt,
+                        iterations: 100000,
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial,
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['decrypt']
+                );
+                
+                // Decrypt message
+                const decrypted = await window.crypto.subtle.decrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: iv
+                    },
+                    key,
+                    encrypted
+                );
+                
+                return new TextDecoder().decode(decrypted);
+            } catch (error) {
+                console.error('Decryption error:', error);
+                alert('Decryption failed. Check your password and IV. Error: ' + error.message);
+                return null;
+            }
+        }
+
+        // Helper functions
+        function arrayBufferToBase64(buffer) {
+            return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            const strength = document.getElementById('password-strength');
+            if (password.length === 0) {
+                strength.className = 'h-1 mt-1 rounded-full';
+                return;
+            }
+            
+            // Score password
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (password.length >= 12) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            
+            // Set color
+            const colors = ['bg-red-500', 'bg-yellow-500', 'bg-green-500', 'bg-blue-500', 'bg-purple-500'];
+            strength.className = `h-1 mt-1 rounded-full ${colors[score-1]} w-${score*20}`;
+        }
+
+        // Sample message loader
+        function loadSampleMessage() {
+            const sampleMsg = "U2FsdGVkX19PT5Cja3BkR5VYOJUSNruo6G+oSgAre6UwdO8hJ5EX2FyaY5Dn5ZxU3zX0byP/pqNClxc=";
+            const sampleIV = "2Ti5SAAqGtQ+/dTq";
+            const samplePass = "SamplePassword123!";
+            
+            document.getElementById('encrypted-input').value = sampleMsg;
+            document.getElementById('iv-decrypt').value = sampleIV;
+            document.getElementById('password-decrypt').value = samplePass;
+            
+            document.getElementById('decrypted').value = "Try decrypting to reveal the sample message!";
+        }
+
+        // Event listeners
+        document.getElementById('encrypt-btn').addEventListener('click', async () => {
+            const message = document.getElementById('message').value;
+            const password = document.getElementById('password').value;
+            
+            if (!message || !password) {
+                alert('Please enter both a message and password');
+                return;
+            }
+            
+            const encrypted = await encryptMessage(message, password);
+            if (encrypted) {
+                document.getElementById('encrypted').value = encrypted;
+            }
+        });
+
+        document.getElementById('decrypt-btn').addEventListener('click', async () => {
+            const encryptedMessage = document.getElementById('encrypted-input').value;
+            const password = document.getElementById('password-decrypt').value;
+            const iv = document.getElementById('iv-decrypt').value;
+            
+            if (!encryptedMessage || !password) {
+                alert('Please enter both the encrypted message and password');
+                return;
+            }
+            
+            const decrypted = await decryptMessage(encryptedMessage, password);
+            if (decrypted) {
+                document.getElementById('decrypted').value = decrypted;
+            }
+        });
+
+        // Copy buttons
+        document.getElementById('copy-iv').addEventListener('click', () => {
+            const iv = document.getElementById('iv');
+            iv.select();
+            document.execCommand('copy');
+            showTooltip('copy-iv', 'IV copied!');
+        });
+
+        document.getElementById('copy-encrypted').addEventListener('click', () => {
+            const encrypted = document.getElementById('encrypted');
+            encrypted.select();
+            document.execCommand('copy');
+            showTooltip('copy-encrypted', 'Encrypted message copied!');
+        });
+
+        function showTooltip(elementId, message) {
+            const button = document.getElementById(elementId);
+            const tooltip = document.createElement('div');
+            tooltip.className = 'absolute bg-black text-white text-xs px-2 py-1 rounded top-0 left-1/2 transform -translate-x-1/2 -translate-y-full';
+            tooltip.textContent = message;
+            button.appendChild(tooltip);
+            
+            setTimeout(() => {
+                button.removeChild(tooltip);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
